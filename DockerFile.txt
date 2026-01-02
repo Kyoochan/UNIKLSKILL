@@ -40,7 +40,8 @@ RUN npm install && npm run build
 # ========================
 # Permissions
 # ========================
-RUN chmod -R 775 storage bootstrap/cache
+RUN chmod -R 775 storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 # ========================
 # Expose Railway port
