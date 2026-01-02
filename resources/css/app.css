@@ -4,7 +4,6 @@
 
 
 /* Your custom imports */
-@import '../../vendor/livewire/flux/dist/flux.css';
 @import "tailwindcss";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
