@@ -1,74 +1,43 @@
-# Base image: PHP 8.2 with Apache
 FROM php:8.2-apache
 
-# --------------------------
-# 1️⃣ Install system dependencies
-# --------------------------
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    libzip-dev zip libonig-dev libxml2-dev unzip git curl \
-    && rm -rf /var/lib/apt/lists/*
+    libzip-dev zip libonig-dev libxml2-dev unzip git curl
 
-# --------------------------
-# 2️⃣ Enable Apache modules
-# --------------------------
+# Enable mod_rewrite
 RUN a2enmod rewrite
 
-# --------------------------
-# 3️⃣ Install PHP extensions
-# --------------------------
+# 🔴 FIX: force single Apache MPM
+RUN a2dismod mpm_event || true \
+ && a2dismod mpm_worker || true \
+ && a2enmod mpm_prefork
+
+# Install PHP extensions
 RUN docker-php-ext-install mbstring bcmath xml pdo_mysql zip
 
-# --------------------------
-# 4️⃣ Install Node.js & npm
-# --------------------------
+# Install Node.js and npm
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get install -y nodejs
 
-# --------------------------
-# 5️⃣ Set Apache document root
-# --------------------------
+# Set Apache document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+ && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# --------------------------
-# 6️⃣ Set working directory
-# --------------------------
 WORKDIR /var/www/html
 
-# --------------------------
-# 7️⃣ Copy application code
-# --------------------------
 COPY . .
 
-# --------------------------
-# 8️⃣ Install Composer
-# --------------------------
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- \
+    --install-dir=/usr/local/bin --filename=composer
 
-# --------------------------
-# 9️⃣ Install PHP dependencies
-# --------------------------
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# --------------------------
-# 🔟 Install npm dependencies & build assets
-# --------------------------
 RUN npm install
 RUN npm run build
 
-# --------------------------
-# 1️⃣1️⃣ Set permissions
-# --------------------------
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# --------------------------
-# 1️⃣2️⃣ Expose port 80 for Apache
-# --------------------------
 EXPOSE 80
-
-# --------------------------
-# 1️⃣3️⃣ Start Apache in foreground
-# --------------------------
 CMD ["apache2-foreground"]
