@@ -16,7 +16,7 @@ return new class extends Migration
     $table->foreignId('club_id')->constrained('clubs')->onDelete('cascade');
     $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
     $table->enum('position', ['member', 'high_committee'])->default('member');
-    $table->enum('role', ['leader', 'treasurer', 'secretary','multimedia', 'sponsorship', 'logistic'])->nullable()->after('position');
+    $table->enum('role', ['leader', 'treasurer', 'secretary','multimedia', 'sponsorship', 'logistic'])->nullable();
     $table->timestamps();
 });
 
